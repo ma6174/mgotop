@@ -122,7 +122,7 @@ func Show(diffs ByDiff, sortKey string, limit int, first, isSortByTime bool) {
 		cond = "time"
 	}
 	fmt.Printf("=================== sort: %s %s ===================\n", sortKey, cond)
-	fmt.Println("total\trlock\twlock\tquery\tinsert\tupdate\tremove\tgetmore\tcommand\tdb.coll")
+	fmt.Println("total\trlock\twlock\tquery\tinsert\tupdate\tremove\tgetmore\tcommand\tns")
 	for i := 0; i < limit && i < len(diffs); i++ {
 		fmt.Printf("\033[2K%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%s\n", diffs[i].Total,
 			diffs[i].ReadLock,
