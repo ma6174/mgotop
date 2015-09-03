@@ -84,11 +84,11 @@ func Show(diffs ByDiff, sortKey string, limit int, first, isSortByTime bool) {
 	if !first {
 		fmt.Printf("\033[%dA\r", limit+2)
 	}
-	cond := "count"
+	cond := "event count"
 	if isSortByTime {
 		cond = "time(ms)"
 	}
-	fmt.Printf("=================== sort: %s %s ===================\n", sortKey, cond)
+	fmt.Printf("\033[1m====== mgotop ====== sort: %s %s ====== %s ======\033[m\n", sortKey, cond, time.Now().Format("2006-01-02T15:04:05"))
 	fmt.Println("total\trlock\twlock\tquery\tinsert\tupdate\tremove\tgetmore\tcommand\tns")
 	for i := 0; i < limit && i < len(diffs); i++ {
 		fmt.Print("\033[2K")
