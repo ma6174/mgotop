@@ -80,9 +80,9 @@ func Calc(last, current *MgoTop, sortBy string, isSortByTime bool) (diffs ByDiff
 	return
 }
 
-func Show(diffs ByDiff, sortKey string, limit int, first, isSortByTime bool) {
-	if !first {
-		fmt.Printf("\033[%dA\r", limit+2)
+func Show(diffs ByDiff, sortKey string, limit, back int, isSortByTime bool) (nextBack int) {
+	if back != 0 {
+		fmt.Printf("\033[%dA\r", back)
 	}
 	cond := "event count"
 	if isSortByTime {
@@ -90,13 +90,15 @@ func Show(diffs ByDiff, sortKey string, limit int, first, isSortByTime bool) {
 	}
 	fmt.Printf("\033[1m====== mgotop ====== sort: %s %s ====== %s ======\033[m\n", sortKey, cond, time.Now().Format("2006-01-02T15:04:05"))
 	fmt.Println("total\trlock\twlock\tquery\tinsert\tupdate\tremove\tgetmore\tcommand\tns")
-	for i := 0; i < limit && i < len(diffs); i++ {
+	var i int
+	for i = 0; i < limit && i < len(diffs); i++ {
 		fmt.Print("\033[2K")
 		for _, event := range events {
 			fmt.Printf("%d\t", diffs[i].Counts[event])
 		}
 		fmt.Printf("%s\n", diffs[i].Ns)
 	}
+	return i + 2
 }
 
 func init() {
@@ -117,21 +119,23 @@ func init() {
 
 func main() {
 	var (
-		host, port   string
 		sortKey      = flag.String("k", "total", "sort key")
 		isSortByTime = flag.Bool("t", false, "sort by used time?")
 		limit        = flag.Int("n", 20, "show top n")
 		sleepTime    = flag.Float64("s", 1, "sleep between each show")
 		lastTop      *MgoTop
-		first        bool = true
+		host, port   string
+		back         int
 	)
 	flag.StringVar(&host, "h", "127.0.0.1", "host")
 	flag.StringVar(&host, "host", "127.0.0.1", "host")
 	flag.StringVar(&port, "p", "27017", "port")
 	flag.StringVar(&port, "port", "27017", "port")
 	flag.Parse()
-	addr := host + ":" + port
-	conn, err := mgo.Dial(addr)
+	if !strings.Contains(host, ":") {
+		host += ":" + port
+	}
+	conn, err := mgo.Dial(host)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -150,8 +154,7 @@ func main() {
 			continue
 		}
 		diffs := Calc(lastTop, m, strings.ToLower(*sortKey), *isSortByTime)
-		Show(diffs, *sortKey, *limit, first, *isSortByTime)
-		first = false
+		back = Show(diffs, *sortKey, *limit, back, *isSortByTime)
 		lastTop = m
 		time.Sleep(time.Duration(*sleepTime*1000) * time.Millisecond)
 	}
