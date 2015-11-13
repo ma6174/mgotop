@@ -121,6 +121,7 @@ func main() {
 	var (
 		sortKey      = flag.String("k", "total", "sort key")
 		isSortByTime = flag.Bool("t", false, "sort by used time?")
+		isDirect     = flag.Bool("d", false, "direct connect to a slave node")
 		limit        = flag.Int("n", 20, "show top n")
 		sleepTime    = flag.Float64("s", 1, "sleep between each show")
 		lastTop      *MgoTop
@@ -135,9 +136,15 @@ func main() {
 	if !strings.Contains(host, ":") {
 		host += ":" + port
 	}
+	if *isDirect {
+		host += "?connect=direct"
+	}
 	conn, err := mgo.Dial(host)
 	if err != nil {
 		log.Fatal(err)
+	}
+	if *isDirect {
+		conn.SetMode(mgo.Eventual, true)
 	}
 	for {
 		m := &MgoTop{}
